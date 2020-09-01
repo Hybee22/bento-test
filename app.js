@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development') {
 
 // Limit Request from same API
 const limiter = rateLimit({
-  max: 100,
+  max: 1000,
   windowMs: 60 * 60 * 1000,
   message: 'Too many request from this IP, please try again in an hour!',
 });
@@ -38,7 +38,6 @@ app.use('/api', limiter);
 
 app.use(cors());
 
-app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -52,10 +51,15 @@ app.use(mongoSanitize()); // Checks the request headers, query strings, params f
 app.use(xss()); // Cleans user input from malicious HTML codes
 
 const userRouter = require('./routes/userRoutes');
+const popular = require('./routes/popular');
+const ratingRouter = require('./routes/ratingRoutes');
+const favoriteRouter = require('./routes/favoriteRoutes');
 
 //   Routes Middleware
+app.use('/api/v1/movies', popular);
 app.use('/api/v1/users', userRouter);
-// app.use('/api/v1/reviews', reviewRouter);
+app.use('/api/v1/ratings', ratingRouter);
+app.use('/api/v1/favorites', favoriteRouter);
 
 // Unhandles Routes
 app.all('*', (req, res, next) => {

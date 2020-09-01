@@ -1,19 +1,17 @@
 const crypto = require('crypto');
-const { promisify } = require('util');
+// const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/libs/catchAsync');
 const AppError = require('../utils/libs/appError');
 const sendEmail = require('../utils/libs/email');
-
-const signToken = (id) => {
-  return jwt.sign({ id }, process.env.BENTO_TEST_ACCESS_TOKEN_SECRET, {
-    expiresIn: process.env.BENTO_TEST_ACCESS_TOKEN_SECRET_EXPIRES_IN,
-  });
-};
+const {
+  signAccessToken,
+  verifyAccessToken,
+} = require('../utils/libs/jwt-helper');
 
 const createSendToken = (user, statusCode, res) => {
-  const token = signToken(user._id);
+  const token = signAccessToken({ id: user._id });
 
   const cookieOptions = {
     expires: new Date(
@@ -49,7 +47,7 @@ exports.signup = catchAsync(async (req, res, next) => {
 
   const options = {
     email: req.body.email,
-    subject: 'Welcome!!',
+    subject: 'Signup Successful!',
     message: "Welcome to Fave Movies, we're glad to have you 🎉🙏",
   };
 
@@ -94,7 +92,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     req.headers.authorization &&
     req.headers.authorization.startsWith('Bearer')
   ) {
-    token = req.headers.authorization.split(' ')[1];
+    token = req.headers.authorization.split(' ')[1].toString();
   } else if (req.cookies.jwt) {
     token = req.cookies.jwt;
   }
@@ -105,7 +103,7 @@ exports.protect = catchAsync(async (req, res, next) => {
     ); // 401 - Unauthorised
   }
   // Token verification
-  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  const decoded = verifyAccessToken(token.toString());
 
   // Check if user still exists
   const currentUser = await User.findById(decoded.id);

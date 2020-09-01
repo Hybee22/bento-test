@@ -1,16 +1,24 @@
-const crypto = require('crypto');
 const mongoose = require('mongoose');
-const validator = require('validator');
-const bcrypt = require('bcryptjs');
 
 const favoriteSchema = new mongoose.Schema(
   {
     movieId: {
       type: String,
-      required: [true, 'Please add a movie.'],
+      required: [true, 'Please add a movie id.'],
     },
-    poster: {
+    movieTitle: {
       type: String,
+      required: [true, 'Please add a movie title'],
+    },
+    imageCover: {
+      type: String,
+    },
+    overview: {
+      type: String,
+      required: [true, 'Please add a movie overview'],
+    },
+    releaseDate: {
+      type: Date,
     },
   },
   {
@@ -22,6 +30,18 @@ const favoriteSchema = new mongoose.Schema(
     },
   }
 );
+
+favoriteSchema.virtual('ratings', {
+  ref: 'Rating',
+  foreignField: 'favorite',
+  localField: '_id',
+});
+
+favoriteSchema.pre('save', function (next) {
+  this.imageCover = `https://image.tmdb.org/t/p/w500${this.imageCover}`;
+  this.movieId = `https://api.themoviedb.org/3/movie/${this.movieId}?api_key=${process.env.MOVIESDB_API}&language=en-US`;
+  next();
+});
 
 const Favorite = mongoose.model('Favorite', favoriteSchema);
 
