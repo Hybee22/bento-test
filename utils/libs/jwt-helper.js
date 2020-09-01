@@ -14,7 +14,7 @@ module.exports = {
   },
   verifyAccessToken: (token) => {
     const payload = JWT.verify(token, secret);
-    console.log(payload);
+    // console.log(payload);
     return payload;
   },
 };
